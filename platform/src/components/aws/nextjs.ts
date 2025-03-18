@@ -8,6 +8,7 @@ import { Function } from "./function.js";
 import {
   Plan,
   SsrSiteArgs,
+  buildDefaultServerCachePolicyProps,
   createBucket,
   createDevServer,
   createServersAndDistribution,
@@ -401,10 +402,22 @@ export interface NextjsArgs extends SsrSiteArgs {
    * @default A new cache policy is created
    *
    * @example
+   *
+   * Pass the ID of an existing policy
+   *
    * ```js
    * {
    *   cachePolicy: "658327ea-f89d-4fab-a63d-7e88639e58f6"
    * }
+   * ```
+   *
+   * Create a server cache policy to be shared across multiple deployments
+   *
+   * ```js title="sst.config.ts"
+   * const policy = new aws.cloudfront.CachePolicy('WebCachePolicy', Nextjs.buildDefaultServerCachePolicyProps());
+   *
+   * new sst.aws.Nextjs("MyWeb", { cachePolicy: policy.id });
+   * new sst.aws.Nextjs("MyWebTwo", { cachePolicy: policy.id });
    * ```
    */
   cachePolicy?: SsrSiteArgs["cachePolicy"];
@@ -1424,6 +1437,14 @@ if(event.request.headers["cloudfront-viewer-longitude"]) {
        */
       revalidationFunction: this.revalidationFunction,
     };
+  }
+
+  public static buildDefaultServerCachePolicyProps() {
+    return buildDefaultServerCachePolicyProps({
+      serverCachePolicy: {
+        allowedHeaders: DEFAULT_CACHE_POLICY_ALLOWED_HEADERS,
+      },
+    });
   }
 
   /** @internal */

@@ -961,33 +961,7 @@ async function handler(event) {
         singletonCachePolicy ??
         new cloudfront.CachePolicy(
           `${name}ServerCachePolicy`,
-          {
-            comment: "SST server response cache policy",
-            defaultTtl: 0,
-            maxTtl: 31536000, // 1 year
-            minTtl: 0,
-            parametersInCacheKeyAndForwardedToOrigin: {
-              cookiesConfig: {
-                cookieBehavior: "none",
-              },
-              headersConfig:
-                (plan.serverCachePolicy?.allowedHeaders ?? []).length > 0
-                  ? {
-                      headerBehavior: "whitelist",
-                      headers: {
-                        items: plan.serverCachePolicy?.allowedHeaders,
-                      },
-                    }
-                  : {
-                      headerBehavior: "none",
-                    },
-              queryStringsConfig: {
-                queryStringBehavior: "all",
-              },
-              enableAcceptEncodingBrotli: true,
-              enableAcceptEncodingGzip: true,
-            },
-          },
+          buildDefaultServerCachePolicyProps(plan),
           { parent },
         );
       return singletonCachePolicy;
@@ -1196,6 +1170,38 @@ async function handler(event) {
       );
     }
   });
+}
+
+export function buildDefaultServerCachePolicyProps(
+  plan: Pick<Plan, "serverCachePolicy"> = {},
+) {
+  return {
+    comment: "SST server response cache policy",
+    defaultTtl: 0,
+    maxTtl: 31536000, // 1 year
+    minTtl: 0,
+    parametersInCacheKeyAndForwardedToOrigin: {
+      cookiesConfig: {
+        cookieBehavior: "none",
+      },
+      headersConfig:
+        (plan.serverCachePolicy?.allowedHeaders ?? []).length > 0
+          ? {
+              headerBehavior: "whitelist",
+              headers: {
+                items: plan.serverCachePolicy?.allowedHeaders,
+              },
+            }
+          : {
+              headerBehavior: "none",
+            },
+      queryStringsConfig: {
+        queryStringBehavior: "all",
+      },
+      enableAcceptEncodingBrotli: true,
+      enableAcceptEncodingGzip: true,
+    },
+  };
 }
 
 export function useCloudFrontFunctionHostHeaderInjection() {

@@ -771,33 +771,9 @@ export function createResources(
       (serverCachePolicy) =>
         new cloudfront.CachePolicy(
           `${name}ServerCachePolicy`,
-          {
-            comment: "SST server response cache policy",
-            defaultTtl: 0,
-            maxTtl: 31536000, // 1 year
-            minTtl: 0,
-            parametersInCacheKeyAndForwardedToOrigin: {
-              cookiesConfig: {
-                cookieBehavior: "none",
-              },
-              headersConfig:
-                (serverCachePolicy?.allowedHeaders ?? []).length > 0
-                  ? {
-                      headerBehavior: "whitelist",
-                      headers: {
-                        items: serverCachePolicy?.allowedHeaders,
-                      },
-                    }
-                  : {
-                      headerBehavior: "none",
-                    },
-              queryStringsConfig: {
-                queryStringBehavior: "all",
-              },
-              enableAcceptEncodingBrotli: true,
-              enableAcceptEncodingGzip: true,
-            },
-          },
+          buildDefaultServerCachePolicyProps({
+            serverCachePolicy,
+          }),
           { parent },
         ),
     );
@@ -1159,4 +1135,36 @@ if (event.request.headers.host.value.includes('cloudfront.net')) {
   };
 }`;
   }
+}
+
+export function buildDefaultServerCachePolicyProps(
+  plan: Pick<Plan, "serverCachePolicy"> = {},
+) {
+  return {
+    comment: "SST server response cache policy",
+    defaultTtl: 0,
+    maxTtl: 31536000, // 1 year
+    minTtl: 0,
+    parametersInCacheKeyAndForwardedToOrigin: {
+      cookiesConfig: {
+        cookieBehavior: "none",
+      },
+      headersConfig:
+        (plan.serverCachePolicy?.allowedHeaders ?? []).length > 0
+          ? {
+              headerBehavior: "whitelist",
+              headers: {
+                items: plan.serverCachePolicy?.allowedHeaders,
+              },
+            }
+          : {
+              headerBehavior: "none",
+            },
+      queryStringsConfig: {
+        queryStringBehavior: "all",
+      },
+      enableAcceptEncodingBrotli: true,
+      enableAcceptEncodingGzip: true,
+    },
+  };
 }
